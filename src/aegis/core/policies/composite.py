@@ -6,10 +6,10 @@ Stratégie par défaut: FIRST_APPLICABLE (le premier moteur retournant ALLOW acc
 """
 
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from aegis.core.domain.entities import Subject
-from aegis.core.domain.policies import PolicyDecision, PolicyEffect, PolicyEngine
+from aegis.core.domain.policies import PolicyDecision, PolicyEngine
 from aegis.core.domain.values import EvaluationContext
 
 
@@ -17,8 +17,8 @@ class CascadeStrategy(str, Enum):
     """Stratégie d'agrégation des résultats d'évaluation."""
 
     FIRST_APPLICABLE = "FIRST_APPLICABLE"  # Le premier ALLOW l'emporte, sinon le dernier DENY
-    AFFIRMATIVE = "AFFIRMATIVE"            # Au moins un ALLOW autorise l'accès
-    UNANIMOUS = "UNANIMOUS"                # Tous les moteurs doivent accorder ALLOW
+    AFFIRMATIVE = "AFFIRMATIVE"  # Au moins un ALLOW autorise l'accès
+    UNANIMOUS = "UNANIMOUS"  # Tous les moteurs doivent accorder ALLOW
 
 
 class CompositePolicyEngine(PolicyEngine):

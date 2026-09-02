@@ -6,11 +6,11 @@ automatique par les collecteurs de logs (Promtail, Fluentd, Datadog, ELK).
 Exclut strictement tout mot de passe, secret ou donnée PII en clair.
 """
 
-from datetime import datetime, timezone
 import json
 import logging
 import os
 import sys
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 

@@ -5,8 +5,8 @@ Charge et valide les variables d'environnement (.env) de manière sécurisée av
 typabilité et zéro dépendance externe obligatoire.
 """
 
-from dataclasses import dataclass, field
 import os
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional
 
@@ -18,7 +18,7 @@ def load_env_file(env_path: Optional[Path] = None) -> None:
         return
 
     try:
-        with open(target_path, "r", encoding="utf-8") as f:
+        with open(target_path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith("#") or "=" not in line:
@@ -54,9 +54,7 @@ class Settings:
     database_url: str = field(default_factory=lambda: os.getenv("DATABASE_URL", "sqlite:///./aegis.db"))
 
     audit_outbox_batch_size: int = field(default_factory=lambda: int(os.getenv("AUDIT_OUTBOX_BATCH_SIZE", "50")))
-    password_hash_iterations: int = field(
-        default_factory=lambda: int(os.getenv("PASSWORD_HASH_ITERATIONS", "100000"))
-    )
+    password_hash_iterations: int = field(default_factory=lambda: int(os.getenv("PASSWORD_HASH_ITERATIONS", "100000")))
 
     cors_origins: List[str] = field(
         default_factory=lambda: [s.strip() for s in os.getenv("CORS_ORIGINS", "*").split(",") if s.strip()]

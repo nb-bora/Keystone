@@ -5,7 +5,7 @@ Implémente le port SubjectRepository avec persistance relationnelle sur Postgre
 et gestion des migrations de schéma.
 """
 
-from typing import Optional
+from typing import Any, Optional
 
 from aegis.core.application.ports import SubjectRepository
 from aegis.core.domain.entities import HumanIdentity, Subject
@@ -14,11 +14,13 @@ from aegis.core.domain.values import EmailAddress, SubjectId
 try:
     from sqlalchemy import Boolean, Column, DateTime, String, create_engine
     from sqlalchemy.orm import declarative_base, sessionmaker
+
     SQLALCHEMY_AVAILABLE = True
     Base = declarative_base()
 
-    class SubjectORM(Base): # type: ignore
+    class SubjectORM(Base):  # type: ignore
         """Modèle ORM relationnel pour la table `aegis_subjects`."""
+
         __tablename__ = "aegis_subjects"
 
         id = Column(String(64), primary_key=True, index=True)

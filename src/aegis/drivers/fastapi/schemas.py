@@ -6,8 +6,9 @@ Swagger / OpenAPI ultra-détaillées (exemples JSON, descriptions et contraintes
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Set
-from pydantic import BaseModel, ConfigDict, Field, EmailStr
+from typing import Any, Dict, Optional, Set
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class RegisterHumanRequest(BaseModel):
@@ -69,7 +70,10 @@ class RegisterAIAgentRequest(BaseModel):
     agent_name: str = Field(..., description="Nom de l'agent IA.")
     owner_identity_id: Optional[str] = Field(default=None, description="ID de l'identité humaine propriétaire.")
     max_autonomy_level: int = Field(
-        default=1, ge=1, le=3, description="Niveau d'autonomie (1: Supervisé, 2: Semi-autonome, 3: Totalement autonome)."
+        default=1,
+        ge=1,
+        le=3,
+        description="Niveau d'autonomie (1: Supervisé, 2: Semi-autonome, 3: Totalement autonome).",
     )
     initial_permissions: Set[str] = Field(default_factory=set, description="Permissions accordées à l'agent IA.")
 

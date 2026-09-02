@@ -5,7 +5,6 @@ Contient les composants d'orchestration autonomes et indépendants de tout frame
 """
 
 import uuid
-from typing import Optional
 
 from aegis.core.application.dtos import (
     EvaluateAccessQuery,
@@ -15,7 +14,7 @@ from aegis.core.application.dtos import (
 from aegis.core.application.ports import EventOutbox, SubjectRepository
 from aegis.core.domain.entities import HumanIdentity
 from aegis.core.domain.events import SubjectRegisteredEvent
-from aegis.core.domain.policies import PolicyEngine
+from aegis.core.domain.policies import PolicyEffect, PolicyEngine
 from aegis.core.domain.values import EmailAddress, EvaluationContext, PermissionCode, SubjectId, TenantId
 
 

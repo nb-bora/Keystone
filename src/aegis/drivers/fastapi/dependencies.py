@@ -5,7 +5,6 @@ Gère l'initialisation du container AegisContainer en singleton et fournit
 le client AegisClient aux endpoints REST.
 """
 
-from typing import Generator
 from aegis.sdk.client import AegisClient, AegisContainer
 
 # Singleton de production / mémoire

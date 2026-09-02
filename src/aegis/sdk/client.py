@@ -11,7 +11,7 @@ from aegis.core.application.dtos import EvaluateAccessQuery, RegisterHumanComman
 from aegis.core.application.ports import EventOutbox, SubjectRepository
 from aegis.core.application.use_cases import EvaluateAccessUseCase, RegisterHumanUseCase
 from aegis.core.domain.entities import HumanIdentity
-from aegis.core.domain.policies import PolicyDecision, PolicyEngine
+from aegis.core.domain.policies import PolicyEngine
 from aegis.core.policies.rbac import RBACPolicyEngine
 from aegis.drivers.inmemory import InMemoryEventOutbox, InMemorySubjectRepository
 

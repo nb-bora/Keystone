@@ -5,14 +5,10 @@ Expose l'ensemble des Use Cases de gestion des identités, d'évaluation d'accè
 d'audit RGPD et d'observabilité (Liveness, Readiness, Startup, Metrics, Correlation ID).
 """
 
-from datetime import datetime, timezone
 import time
 import uuid
-from typing import Any, Dict, List, Optional
-
-from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from datetime import datetime, timezone
+from typing import Any, Dict, List
 
 from aegis import __version__
 from aegis.core.config import settings
@@ -30,6 +26,9 @@ from aegis.drivers.fastapi.schemas import (
     SubjectResponse,
 )
 from aegis.sdk.client import AegisClient, AegisContainer
+from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 logger = get_logger("aegis.fastapi")
 
@@ -92,6 +91,7 @@ async def correlation_id_middleware(request: Request, call_next: Any) -> Respons
 
 
 # --- ENDPOINTS DE SANTÉ TRIPLE-NIVEAUX (Liveness, Readiness, Startup) ---
+
 
 @app.get(
     "/health/live",
@@ -161,6 +161,7 @@ def get_metrics(container: AegisContainer = Depends(get_aegis_container)) -> Dic
 
 # --- ENDPOINTS GESTION DES SUJETS ---
 
+
 @app.post(
     "/api/v1/subjects/human",
     response_model=SubjectResponse,
@@ -188,7 +189,7 @@ def register_human_subject(
             created_at=human.created_at,
         )
     except ValueError as err:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err)) from err
 
 
 @app.post(

@@ -6,11 +6,11 @@ Ces événements sont destinés au Transactional Outbox pour alimenter les logs 
 les notifications et la synchronisation inter-services.
 """
 
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-import uuid
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from aegis.core.domain.values import SubjectId
 

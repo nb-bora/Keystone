@@ -6,9 +6,9 @@ Toutes les classes utilisent `slots=True, frozen=True` pour garantir une emprein
 mémoire minimale (réduction ~60%) et un hachage O(1) thread-safe.
 """
 
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-import re
 from typing import Any, Dict, Optional
 
 

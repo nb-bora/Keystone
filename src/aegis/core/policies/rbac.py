@@ -6,10 +6,10 @@ permissions directement ou indirectement assignées.
 Complexité Temporelle: O(1) moyen grâce aux ensembles hachés `set[PermissionCode]`.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from aegis.core.domain.entities import ApiKeyActor, HumanIdentity, Subject
-from aegis.core.domain.policies import PolicyDecision, PolicyEffect, PolicyEngine
+from aegis.core.domain.policies import PolicyDecision, PolicyEngine
 from aegis.core.domain.values import EvaluationContext, PermissionCode
 
 
@@ -28,9 +28,7 @@ class RBACPolicyEngine(PolicyEngine):
     ) -> PolicyDecision:
         # Rule 1: Si le sujet est suspendu / inactif -> DENY immédiat O(1)
         if not subject.is_active:
-            return PolicyDecision.deny(
-                action=action, reason=f"Le sujet '{subject.id.value}' est inactif ou suspendu."
-            )
+            return PolicyDecision.deny(action=action, reason=f"Le sujet '{subject.id.value}' est inactif ou suspendu.")
 
         perm_code = PermissionCode(action)
 
@@ -45,13 +43,9 @@ class RBACPolicyEngine(PolicyEngine):
         # Rule 3: Évaluation pour un Acteur Clé API
         elif isinstance(subject, ApiKeyActor):
             if subject.is_expired():
-                return PolicyDecision.deny(
-                    action=action, reason=f"La clé API '{subject.id.value}' a expiré."
-                )
+                return PolicyDecision.deny(action=action, reason=f"La clé API '{subject.id.value}' a expiré.")
             if perm_code in subject.permissions:
-                return PolicyDecision.allow(
-                    action=action, reason=f"Permission '{action}' autorisée pour la clé API."
-                )
+                return PolicyDecision.allow(action=action, reason=f"Permission '{action}' autorisée pour la clé API.")
 
         return PolicyDecision.deny(
             action=action, reason=f"Permission '{action}' non trouvée pour le sujet '{subject.id.value}'."
