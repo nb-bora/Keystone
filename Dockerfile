@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile pour Aegis IAM Enterprise API
 # Stage 1: Build & Environment Setup
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 WORKDIR /build
 
@@ -15,10 +15,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY pyproject.toml README.md ./
 COPY src/ ./src/
 
-RUN pip install --no-cache-dir --prefix=/install . fastapi pydantic uvicorn
+# 1. Installer hatchling dans l'environnement Python du builder
+RUN pip install --no-cache-dir hatchling setuptools wheel
+
+# 2. Installer le package Aegis et ses dépendances dans /install
+RUN pip install --no-cache-dir --no-build-isolation --prefix=/install . && \
+    pip install --no-cache-dir --prefix=/install fastapi pydantic uvicorn
 
 # Stage 2: Final Runtime Image (Secured & Non-root)
-FROM python:3.11-slim as runner
+FROM python:3.11-slim AS runner
 
 WORKDIR /app
 
@@ -41,6 +46,6 @@ USER aegisuser
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready')" || exit 1
 
 CMD ["uvicorn", "aegis.drivers.fastapi.app:app", "--host", "0.0.0.0", "--port", "8000"]
