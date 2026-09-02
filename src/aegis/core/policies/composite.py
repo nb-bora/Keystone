@@ -55,11 +55,9 @@ class CompositePolicyEngine(PolicyEngine):
 
             return last_decision or PolicyDecision.deny(action=action, reason="Aucun moteur n'a accordé l'accès.")
 
-        elif self._strategy == CascadeStrategy.UNANIMOUS:
+        else:
             for engine in self._engines:
                 decision = engine.evaluate(subject, action, resource, context)
                 if not decision.is_allowed:
                     return decision
             return PolicyDecision.allow(action=action, reason="Tous les moteurs ont validé l'accès.")
-
-        return PolicyDecision.deny(action=action, reason="Stratégie de cascade invalide.")

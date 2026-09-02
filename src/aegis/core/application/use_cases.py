@@ -80,7 +80,7 @@ class EvaluateAccessUseCase:
         if subject is None:
             return EvaluationResultDTO(
                 is_allowed=False,
-                effect=PolicyEffect.DENY,  # type: ignore
+                effect=PolicyEffect.DENY,
                 action=query.action,
                 reason=f"Sujet '{query.subject_id}' introuvable.",
             )
