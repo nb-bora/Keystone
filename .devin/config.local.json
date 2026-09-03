@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Exec(ruff format)",
+      "Exec(ruff check)"
+    ]
+  }
+}

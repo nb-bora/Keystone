@@ -1,0 +1,219 @@
+{
+  "dashboard": {
+    "title": "Aegis IAM Monitoring",
+    "uid": "aegis-iam-dashboard",
+    "tags": ["aegis", "iam", "security"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Pending Audit Events",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "aegis_pending_audit_events",
+            "legendFormat": "Pending Events"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "short"
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [100],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": ["A", "5m", "now"]
+              },
+              "reducer": {
+                "params": [],
+                "type": "avg"
+              },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "name": "High Pending Events Alert",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 2,
+        "title": "Authorization Decisions",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(aegis_authorization_decisions_total[5m])",
+            "legendFormat": "Total Decisions"
+          },
+          {
+            "expr": "rate(aegis_authorization_denials_total[5m])",
+            "legendFormat": "Denials"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Total Subjects",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "aegis_total_subjects",
+            "legendFormat": "Total Subjects"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Service Availability",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"aegis-api\"}",
+            "legendFormat": "Service Up"
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 0,
+            "color": "red"
+          },
+          {
+            "value": 1,
+            "color": "green"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Authentication Success Rate",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "rate(aegis_authentication_success_total[5m]) / (rate(aegis_authentication_success_total[5m]) + rate(aegis_authentication_failure_total[5m])) * 100",
+            "legendFormat": "Success Rate %"
+          }
+        ],
+        "max": 100,
+        "min": 0,
+        "thresholds": [
+          {
+            "value": 90,
+            "color": "green"
+          },
+          {
+            "value": 70,
+            "color": "yellow"
+          },
+          {
+            "value": 50,
+            "color": "red"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Session Activity",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "aegis_active_sessions",
+            "legendFormat": "Active Sessions"
+          },
+          {
+            "expr": "aegis_revoked_sessions_total",
+            "legendFormat": "Revoked Sessions"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "GDPR Compliance",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "aegis_gdpr_export_requests_total",
+            "legendFormat": "Export Requests"
+          },
+          {
+            "expr": "aegis_gdpr_deletion_requests_total",
+            "legendFormat": "Deletion Requests"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Cache Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "aegis_cache_hits",
+            "legendFormat": "Cache Hits"
+          },
+          {
+            "expr": "aegis_cache_misses",
+            "legendFormat": "Cache Misses"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Cache Hit Rate",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "aegis_cache_hits / (aegis_cache_hits + aegis_cache_misses) * 100",
+            "legendFormat": "Hit Rate %"
+          }
+        ],
+        "max": 100,
+        "min": 0
+      },
+      {
+        "id": 10,
+        "title": "Database Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "pg_stat_activity_count",
+            "legendFormat": "Active Connections"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes{job=\"aegis-api\"}",
+            "legendFormat": "Memory Bytes"
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "CPU Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total{job=\"aegis-api\"}[5m])",
+            "legendFormat": "CPU Usage"
+          }
+        ]
+      }
+    ]
+  }
+}
