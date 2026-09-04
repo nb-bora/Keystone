@@ -198,8 +198,8 @@ class RedisEventPublisher(EventPublisher):
                 import aioredis
 
                 self._redis = await aioredis.from_url(self._redis_url)
-            except ImportError:
-                raise RuntimeError("aioredis est requis pour RedisEventPublisher")
+            except ImportError as err:
+                raise RuntimeError("aioredis est requis pour RedisEventPublisher") from err
         return self._redis
 
     async def publish(self, event: OutboxEvent) -> bool:

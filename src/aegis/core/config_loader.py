@@ -296,7 +296,7 @@ class ConfigLoader:
             with open(self.config_path, encoding="utf-8") as f:
                 return yaml.safe_load(f) or {}
         except Exception as e:
-            raise ConfigurationError(f"Erreur lors du chargement du fichier de configuration: {e}")
+            raise ConfigurationError(f"Erreur lors du chargement du fichier de configuration: {e}") from e
 
     def _build_config_object(self) -> AegisConfig:
         """Construit l'objet de configuration depuis les données brutes."""
