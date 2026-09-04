@@ -23,11 +23,11 @@ from aegis.core.domain.values import SubjectId
 class AuthenticationMethod(str, Enum):
     """Méthodes d'authentification supportées."""
 
-    PASSWORD = "password"
+    PASSWORD = "password"  # noqa: S105
     OIDC = "oidc"
     MAGIC_LINK = "magic_link"
     PASSKEY = "passkey"
-    M2M_TOKEN = "m2m_token"
+    M2M_TOKEN = "m2m_token"  # noqa: S105
     API_KEY = "api_key"
 
 
