@@ -50,7 +50,7 @@ class AuthenticationConfig:
     """Configuration des stratégies d'authentification."""
 
     strategies: List[str] = field(default_factory=lambda: ["password"])
-    password_algorithm: str = "pbkdf2_sha256"
+    password_algorithm: str = field(default="pbkdf2_sha256")
     password_iterations: int = 100000
     oidc_providers: List[Dict[str, Any]] = field(default_factory=list)
 
