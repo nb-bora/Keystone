@@ -16,7 +16,7 @@ from aegis.core.domain.entities import AIAgentActor, ServiceAccount
 from aegis.core.domain.values import PermissionCode, SubjectId, TenantId
 from aegis.core.logger import get_logger
 from aegis.drivers.fastapi.dependencies import get_aegis_client, get_aegis_container
-from aegis.drivers.fastapi.oauth_router import init_oauth_handler, oauth_router
+from aegis.drivers.fastapi.oauth_router import cleanup_oauth_handler, init_oauth_handler, oauth_router
 from aegis.drivers.fastapi.schemas import (
     AccessEvaluationResponse,
     AuditEventResponse,
@@ -154,6 +154,15 @@ async def startup_event():
     except ValueError as e:
         logger.warning(f"OAuth handler non initialisé: {e}")
 
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Nettoie les ressources à l'arrêt."""
+    try:
+        cleanup_oauth_handler()
+        logger.info("OAuth handler nettoyé avec succès")
+    except Exception as e:
+        logger.warning(f"Erreur lors du nettoyage OAuth: {e}")
 
 
 # Middleware de Corrélation & Logging Structuré

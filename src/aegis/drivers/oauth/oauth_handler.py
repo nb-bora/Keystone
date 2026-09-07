@@ -32,9 +32,7 @@ class OAuthHandler:
         self._providers = {p.name: p for p in providers}
         self._http_client = httpx.AsyncClient(timeout=30.0)
 
-    def get_authorization_url(
-        self, provider_name: str, redirect_uri: str, state: Optional[str] = None
-    ) -> str:
+    def get_authorization_url(self, provider_name: str, redirect_uri: str, state: Optional[str] = None) -> str:
         """Génère l'URL d'autorisation OAuth."""
         provider = self._providers.get(provider_name)
         if not provider:
@@ -52,9 +50,7 @@ class OAuthHandler:
 
         return f"{provider.authorization_url}?{urlencode(params)}"
 
-    async def exchange_code_for_token(
-        self, provider_name: str, code: str, redirect_uri: str
-    ) -> Dict[str, Any]:
+    async def exchange_code_for_token(self, provider_name: str, code: str, redirect_uri: str) -> Dict[str, Any]:
         """Échange un code d'autorisation contre un token d'accès."""
         provider = self._providers.get(provider_name)
         if not provider:
@@ -106,9 +102,7 @@ class OAuthHandler:
 
 
 # Configurations par défaut pour les providers courants
-def create_google_provider(
-    client_id: str, client_secret: str, redirect_uri: str
-) -> OAuthProviderConfig:
+def create_google_provider(client_id: str, client_secret: str, redirect_uri: str) -> OAuthProviderConfig:
     """Crée une configuration Google OAuth."""
     return OAuthProviderConfig(
         name="google",
@@ -122,9 +116,7 @@ def create_google_provider(
     )
 
 
-def create_github_provider(
-    client_id: str, client_secret: str, redirect_uri: str
-) -> OAuthProviderConfig:
+def create_github_provider(client_id: str, client_secret: str, redirect_uri: str) -> OAuthProviderConfig:
     """Crée une configuration GitHub OAuth."""
     return OAuthProviderConfig(
         name="github",
@@ -138,9 +130,7 @@ def create_github_provider(
     )
 
 
-def create_linkedin_provider(
-    client_id: str, client_secret: str, redirect_uri: str
-) -> OAuthProviderConfig:
+def create_linkedin_provider(client_id: str, client_secret: str, redirect_uri: str) -> OAuthProviderConfig:
     """Crée une configuration LinkedIn OAuth."""
     return OAuthProviderConfig(
         name="linkedin",

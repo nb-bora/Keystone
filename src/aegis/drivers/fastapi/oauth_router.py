@@ -6,6 +6,7 @@ Endpoints pour l'authentification via Google, GitHub et LinkedIn.
 
 import os
 import uuid
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
@@ -68,6 +69,9 @@ oauth_router = APIRouter(prefix="/api/v1/auth/oauth", tags=["OAuth Authenticatio
 # Singleton OAuth Handler (initialisé au démarrage)
 _oauth_handler: Optional[OAuthHandler] = None
 
+# Storage pour les states OAuth (en production, utiliser Redis ou cache distribué)
+_oauth_states: Dict[str, Dict[str, Any]] = {}
+
 
 def get_oauth_handler() -> OAuthHandler:
     """Récupère l'handler OAuth singleton."""
@@ -80,6 +84,11 @@ def get_oauth_handler() -> OAuthHandler:
 def init_oauth_handler() -> OAuthHandler:
     """Initialise l'handler OAuth avec les variables d'environnement."""
     global _oauth_handler
+
+    # Fermer l'handler existant s'il y en a un
+    if _oauth_handler is not None:
+        import asyncio
+        asyncio.create_task(_oauth_handler.close())
 
     providers: List[OAuthProviderConfig] = []
 
@@ -120,6 +129,15 @@ def init_oauth_handler() -> OAuthHandler:
     return _oauth_handler
 
 
+def cleanup_oauth_handler():
+    """Nettoie l'handler OAuth à l'arrêt de l'application."""
+    global _oauth_handler
+    if _oauth_handler is not None:
+        import asyncio
+        asyncio.create_task(_oauth_handler.close())
+        _oauth_handler = None
+
+
 @oauth_router.get(
     "/providers",
     response_model=List[Dict[str, str]],
@@ -146,8 +164,7 @@ async def list_providers() -> List[Dict[str, str]]:
         return []
 
     return [
-        {"name": name, "display_name": provider.display_name}
-        for name, provider in _oauth_handler._providers.items()
+        {"name": name, "display_name": provider.display_name} for name, provider in _oauth_handler._providers.items()
     ]
 
 
@@ -163,18 +180,14 @@ async def list_providers() -> List[Dict[str, str]]:
                 "application/json": {
                     "example": {
                         "auth_url": "https://accounts.google.com/o/oauth2/v2/auth?client_id=...&redirect_uri=...&response_type=code&scope=openid%20email%20profile&state=...",
-                        "state": "550e8400-e29b-41d4-a716-446655440000"
+                        "state": "550e8400-e29b-41d4-a716-446655440000",
                     }
                 }
             },
         },
         400: {
             "description": "Invalid provider or missing parameters",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Provider 'invalid' non configuré"}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Provider 'invalid' non configuré"}}},
         },
     },
 )
@@ -188,6 +201,13 @@ async def oauth_login(request: OAuthLoginRequest) -> OAuthLoginResponse:
 
     # Générer un state pour la sécurité CSRF
     state = str(uuid.uuid4())
+
+    # Stocker le state avec le redirect_uri et l'expiration (10 minutes)
+    _oauth_states[state] = {
+        "redirect_uri": request.redirect_uri,
+        "provider": request.provider,
+        "expires_at": datetime.now(timezone.utc) + timedelta(minutes=10),
+    }
 
     auth_url = handler.get_authorization_url(
         provider_name=request.provider, redirect_uri=request.redirect_uri, state=state
@@ -215,30 +235,22 @@ async def oauth_login(request: OAuthLoginRequest) -> OAuthLoginResponse:
                             "name": "John Doe",
                             "picture": "https://example.com/photo.jpg",
                             "given_name": "John",
-                            "family_name": "Doe"
+                            "family_name": "Doe",
                         },
                         "access_token": "ya29.a0AfH6SMB...",
                         "token_type": "bearer",
-                        "expires_in": 3600
+                        "expires_in": 3600,
                     }
                 }
             },
         },
         400: {
             "description": "Invalid OAuth code or provider error",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Erreur OAuth: ..."}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Erreur OAuth: ..."}}},
         },
         500: {
             "description": "Server error during OAuth processing",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Erreur OAuth: ..."}
-                }
-            },
+            "content": {"application/json": {"example": {"detail": "Erreur OAuth: ..."}}},
         },
     },
 )
@@ -246,10 +258,31 @@ async def oauth_callback(
     provider: str,
     code: str = Query(..., description="Code d'autorisation OAuth"),
     state: str = Query(..., description="State OAuth"),
-    redirect_uri: str = Query(..., description="URI de redirection"),
 ) -> Dict[str, Any]:
     """Callback OAuth pour traiter la réponse du provider."""
     handler = get_oauth_handler()
+
+    # Valider le state CSRF
+    if state not in _oauth_states:
+        raise HTTPException(status_code=400, detail="State OAuth invalide ou expiré")
+
+    state_data = _oauth_states[state]
+
+    # Vérifier l'expiration du state
+    if datetime.now(timezone.utc) > state_data["expires_at"]:
+        del _oauth_states[state]
+        raise HTTPException(status_code=400, detail="State OAuth expiré")
+
+    # Vérifier que le provider correspond
+    if state_data["provider"] != provider:
+        del _oauth_states[state]
+        raise HTTPException(status_code=400, detail="Provider mismatch")
+
+    # Récupérer le redirect_uri stocké
+    redirect_uri = state_data["redirect_uri"]
+
+    # Supprimer le state après utilisation (one-time use)
+    del _oauth_states[state]
 
     try:
         # Échanger le code contre un token d'accès
@@ -267,11 +300,10 @@ async def oauth_callback(
         # Normaliser les données utilisateur selon le provider
         normalized_user = normalize_user_info(provider, user_info)
 
-        # Ici, vous devriez:
-        # 1. Vérifier si l'utilisateur existe déjà dans votre repository
-        # 2. Le créer s'il n'existe pas
-        # 3. Générer un JWT token ou session
-        # 4. Retourner le token
+        # Créer ou mettre à jour l'utilisateur dans Aegis IAM
+        # Pour l'instant, retourner les informations normalisées
+        # TODO: Intégrer avec le repository Aegis pour créer l'utilisateur
+        # TODO: Générer un JWT token ou session Aegis
 
         return {
             "status": "success",
@@ -282,7 +314,11 @@ async def oauth_callback(
             "expires_in": token_data.get("expires_in"),
         }
 
+    except HTTPException:
+        # Re-raise HTTPException pour les erreurs client
+        raise
     except Exception as e:
+        # Capture les erreurs inattendues comme erreurs serveur
         raise HTTPException(status_code=500, detail=f"Erreur OAuth: {str(e)}") from e
 
 
