@@ -23,7 +23,7 @@ classifiers = [
     "Topic :: Security",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = ["pyyaml>=6.0"]
+dependencies = ["pyyaml>=6.0", "httpx>=0.25.0"]
 
 [project.optional-dependencies]
 django = ["django>=4.2"]
@@ -31,6 +31,7 @@ sqlalchemy = ["sqlalchemy>=2.0", "psycopg2-binary>=2.9.0"]
 redis = ["redis>=5.0"]
 alembic = ["alembic>=1.12.0"]
 asyncio = ["asyncio>=3.4.3"]
+fastapi = ["fastapi>=0.104.0", "uvicorn>=0.24.0"]
 dev = [
     "pytest>=8.0.0",
     "pytest-cov>=4.1.0",
