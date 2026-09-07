@@ -11,7 +11,6 @@ from aegis.core.policies.rbac import RBACPolicyEngine
 
 
 class TestRBACPolicyEngine(unittest.TestCase):
-
     def test_rbac_evaluation_allow(self) -> None:
         engine = RBACPolicyEngine()
         human = HumanIdentity(id=SubjectId("user-1"), email=EmailAddress("bob@example.com"))

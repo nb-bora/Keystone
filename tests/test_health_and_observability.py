@@ -6,15 +6,16 @@ import unittest
 
 try:
     from fastapi.testclient import TestClient
+
     from aegis.drivers.fastapi.app import app
     from aegis.drivers.fastapi.dependencies import reset_global_container
+
     FASTAPI_AVAILABLE = True
 except ImportError:
     FASTAPI_AVAILABLE = False
 
 
 class TestHealthAndObservability(unittest.TestCase):
-
     def setUp(self) -> None:
         if FASTAPI_AVAILABLE:
             reset_global_container()

@@ -9,7 +9,6 @@ from aegis.sdk.client import AegisClient, AegisContainer
 
 
 class TestUseCasesAndSDK(unittest.TestCase):
-
     def test_full_sdk_workflow(self) -> None:
         container = AegisContainer()
         client = AegisClient(container)

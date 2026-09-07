@@ -1,0 +1,177 @@
+# ==============================================================================
+# Aegis IAM Engine - Configuration Déclarative
+# ==============================================================================
+# Ce fichier permet de configurer Aegis sans modifier le code source.
+# Copiez ce fichier et ajustez-le selon vos besoins.
+# ==============================================================================
+
+# --- ENVIROMENT ---
+environment:
+  mode: development  # development, test, production
+  debug: true
+  log_level: INFO
+
+# --- STORAGE DRIVER ---
+storage:
+  driver: inmemory  # inmemory, sqlalchemy, django
+  sqlalchemy:
+    url: sqlite:///./aegis.db  #ou postgresql+psycopg2://user:pass@host:port/db
+    pool_size: 5
+    max_overflow: 10
+    echo: false
+
+# --- POLICY ENGINES ---
+policy_engines:
+  primary: rbac  # rbac, abac, rebac, composite
+  composite:
+    strategy: first_applicable  # first_applicable, affirmative, unanimous
+    engines:
+      - rbac
+      - abac
+
+# --- AUTHENTICATION STRATEGIES ---
+authentication:
+  strategies:
+    - password
+    - oidc
+  password:
+    algorithm: pbkdf2_sha256
+    iterations: 100000
+  oidc:
+    providers:
+      - name: google
+        client_id: your-client-id
+        client_secret: your-client-secret
+        discovery_url: https://accounts.google.com/.well-known/openid-configuration
+
+# --- MULTI-TENANCY ---
+tenancy:
+  mode: flat  # flat, single, hierarchical
+  isolation:
+    type: row_level  # row_level, database, schema
+  hierarchy:
+    enabled: false
+    levels:
+      - enterprise
+      - organization
+      - workspace
+      - project
+
+# --- SESSION MANAGEMENT ---
+sessions:
+  enabled: true
+  backend: redis  # redis, memory, database
+  redis:
+    url: redis://localhost:6379/0
+    ttl: 3600  # seconds
+  max_sessions_per_user: 5
+  global_revocation_enabled: true
+
+# --- AUDIT & OUTBOX ---
+audit:
+  outbox:
+    enabled: true
+    backend: database  # database, redis, kafka
+    batch_size: 50
+    worker_enabled: true
+    worker_concurrency: 2
+  retention:
+    days: 90
+    anonymization_enabled: true
+
+# --- GDPR COMPLIANCE ---
+gdpr:
+  enabled: true
+  right_to_erasure:
+    enabled: true
+    anonymization_delay_days: 30
+    hard_delete_after_days: 365
+  data_export:
+    enabled: true
+    format: json  # json, csv
+
+# --- CACHE ---
+cache:
+  enabled: true
+  backend: redis  # redis, memory
+  redis:
+    url: redis://localhost:6379/1
+    ttl: 300  # seconds
+  authorization_decisions:
+    enabled: true
+    ttl: 60
+
+# --- VALIDATION SYSTEM ---
+validation:
+  strict_mode: true
+  custom_validators: []
+  email:
+    regex: "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
+    check_deliverability: false
+  password:
+    min_length: 8
+    require_uppercase: true
+    require_lowercase: true
+    require_numbers: true
+    require_special_chars: true
+
+# --- PLUGINS ---
+plugins:
+  enabled: true
+  directories:
+    - ./plugins
+  hooks:
+    - pre_use_case
+    - post_use_case
+    - pre_authorization
+    - post_authorization
+    - pre_authentication
+    - post_authentication
+
+# --- SECURITY ---
+security:
+  secret_key: ${SECRET_KEY}  # from environment variable
+  cors:
+    enabled: true
+    origins: "*"
+    allow_credentials: true
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 60
+    burst: 10
+  encryption:
+    enabled: false
+    algorithm: aes-256-gcm
+
+# --- OBSERVABILITY ---
+observability:
+  metrics:
+    enabled: true
+    backend: prometheus  # prometheus, datadog, cloudwatch
+    port: 9090
+  tracing:
+    enabled: false
+    backend: jaeger  # jaeger, zipkin
+  logging:
+    format: json  # json, text
+    correlation_id:
+      enabled: true
+      header_name: X-Request-ID
+
+# --- API ---
+api:
+  framework: fastapi  # fastapi, django, flask
+  host: 0.0.0.0
+  port: 8000
+  docs_enabled: true
+  docs_url: /docs
+  redoc_url: /redoc
+
+# --- TESTING ---
+testing:
+  mock_external_services: true
+  use_test_database: true
+  parallel: false
+  coverage:
+    enabled: true
+    min_percentage: 80

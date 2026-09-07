@@ -1,0 +1,59 @@
+groups:
+  - name: aegis_alerts
+    interval: 30s
+    rules:
+      - alert: HighPendingAuditEvents
+        expr: aegis_pending_audit_events > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: outbox
+        annotations:
+          summary: "High number of pending audit events"
+          description: "There are {{ $value }} pending audit events in the outbox for more than 5 minutes."
+
+      - alert: CriticalPendingAuditEvents
+        expr: aegis_pending_audit_events > 1000
+        for: 1m
+        labels:
+          severity: critical
+          component: outbox
+        annotations:
+          summary: "Critical number of pending audit events"
+          description: "There are {{ $value }} pending audit events in the outbox. Immediate action required."
+
+      - alert: HighAuthorizationDenials
+        expr: rate(aegis_authorization_denials_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: authorization
+        annotations:
+          summary: "High rate of authorization denials"
+          description: "Authorization denials rate is {{ $value }} per second over the last 5 minutes."
+
+      - alert: CriticalAuthorizationDenials
+        expr: rate(aegis_authorization_denials_total[1m]) > 50
+        for: 1m
+        labels:
+          severity: critical
+          component: authorization
+        annotations:
+          summary: "Critical rate of authorization denials"
+          description: "Authorization denials rate is {{ $value }} per second over the last minute. Possible security incident."
+
+      - alert: ServiceDown
+        expr: up{job="aegis-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: availability
+        annotations:
+          summary: "Aegis API service is down"
+          description: "The Aegis API service has been down for more than 1 minute."
+
+      - label_set:
+        labels:
+          service: aegis-iam
+        expressions:
+          - expr: 'job=~".*aegis.*"'

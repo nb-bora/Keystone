@@ -9,7 +9,6 @@ from aegis.core.domain.values import EmailAddress, PermissionCode, SubjectId
 
 
 class TestDomainValuesAndEntities(unittest.TestCase):
-
     def test_subject_id_valid(self) -> None:
         sid = SubjectId("sub-123")
         self.assertEqual(sid.value, "sub-123")
@@ -76,6 +75,7 @@ class TestDomainValuesAndEntities(unittest.TestCase):
 
     def test_settings_loading(self) -> None:
         from aegis.core.config import settings
+
         self.assertIsNotNone(settings.environment)
         self.assertGreater(settings.port, 0)
         self.assertIsNotNone(settings.secret_key)
