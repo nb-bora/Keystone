@@ -76,18 +76,9 @@ class OAuthHandler:
             raise ValueError(f"Provider '{provider_name}' non configuré")
 
         headers = {}
-        auth_header = ""
 
-        # GitHub utilise Authorization header
-        if provider_name == "github":
-            auth_header = f"Bearer {access_token}"
-            headers["Authorization"] = auth_header
-        # Google utilise Authorization header
-        elif provider_name == "google":
-            auth_header = f"Bearer {access_token}"
-            headers["Authorization"] = auth_header
-        # LinkedIn utilise Authorization header
-        elif provider_name == "linkedin":
+        # GitHub, Google et LinkedIn utilisent Authorization header
+        if provider_name in ("github", "google", "linkedin"):
             auth_header = f"Bearer {access_token}"
             headers["Authorization"] = auth_header
 
@@ -102,7 +93,7 @@ class OAuthHandler:
 
 
 # Configurations par défaut pour les providers courants
-def create_google_provider(client_id: str, client_secret: str, redirect_uri: str) -> OAuthProviderConfig:
+def create_google_provider(client_id: str, client_secret: str) -> OAuthProviderConfig:
     """Crée une configuration Google OAuth."""
     return OAuthProviderConfig(
         name="google",
@@ -116,7 +107,7 @@ def create_google_provider(client_id: str, client_secret: str, redirect_uri: str
     )
 
 
-def create_github_provider(client_id: str, client_secret: str, redirect_uri: str) -> OAuthProviderConfig:
+def create_github_provider(client_id: str, client_secret: str) -> OAuthProviderConfig:
     """Crée une configuration GitHub OAuth."""
     return OAuthProviderConfig(
         name="github",
@@ -130,7 +121,7 @@ def create_github_provider(client_id: str, client_secret: str, redirect_uri: str
     )
 
 
-def create_linkedin_provider(client_id: str, client_secret: str, redirect_uri: str) -> OAuthProviderConfig:
+def create_linkedin_provider(client_id: str, client_secret: str) -> OAuthProviderConfig:
     """Crée une configuration LinkedIn OAuth."""
     return OAuthProviderConfig(
         name="linkedin",

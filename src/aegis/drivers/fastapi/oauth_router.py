@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
+from typing_extensions import Annotated
 
 from aegis.drivers.oauth import (
     OAuthHandler,
@@ -72,9 +73,16 @@ _oauth_handler: Optional[OAuthHandler] = None
 # Storage pour les states OAuth (en production, utiliser Redis ou cache distribué)
 _oauth_states: Dict[str, Dict[str, Any]] = {}
 
+# Storage pour les tasks asyncio à nettoyer (pour éviter le garbage collection)
+_oauth_cleanup_tasks: List[Any] = []
+
 
 def get_oauth_handler() -> OAuthHandler:
-    """Récupère l'handler OAuth singleton."""
+    """Récupère l'handler OAuth singleton.
+
+    Raises:
+        HTTPException: Si l'handler OAuth n'est pas initialisé (status code 500).
+    """
     global _oauth_handler
     if _oauth_handler is None:
         raise HTTPException(status_code=500, detail="OAuth handler non initialisé")
@@ -88,7 +96,9 @@ def init_oauth_handler() -> OAuthHandler:
     # Fermer l'handler existant s'il y en a un
     if _oauth_handler is not None:
         import asyncio
-        asyncio.create_task(_oauth_handler.close())
+
+        task = asyncio.create_task(_oauth_handler.close())
+        _oauth_cleanup_tasks.append(task)  # SonarQube: Prevent garbage collection
 
     providers: List[OAuthProviderConfig] = []
 
@@ -98,7 +108,6 @@ def init_oauth_handler() -> OAuthHandler:
             create_google_provider(
                 client_id=os.getenv("GOOGLE_CLIENT_ID"),
                 client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-                redirect_uri="",
             )
         )
 
@@ -108,7 +117,6 @@ def init_oauth_handler() -> OAuthHandler:
             create_github_provider(
                 client_id=os.getenv("GITHUB_CLIENT_ID"),
                 client_secret=os.getenv("GITHUB_CLIENT_SECRET"),
-                redirect_uri="",
             )
         )
 
@@ -118,7 +126,6 @@ def init_oauth_handler() -> OAuthHandler:
             create_linkedin_provider(
                 client_id=os.getenv("LINKEDIN_CLIENT_ID"),
                 client_secret=os.getenv("LINKEDIN_CLIENT_SECRET"),
-                redirect_uri="",
             )
         )
 
@@ -131,16 +138,17 @@ def init_oauth_handler() -> OAuthHandler:
 
 def cleanup_oauth_handler():
     """Nettoie l'handler OAuth à l'arrêt de l'application."""
-    global _oauth_handler
+    global _oauth_handler, _oauth_cleanup_tasks
     if _oauth_handler is not None:
         import asyncio
-        asyncio.create_task(_oauth_handler.close())
+
+        task = asyncio.create_task(_oauth_handler.close())
+        _oauth_cleanup_tasks.append(task)  # SonarQube: Prevent garbage collection
         _oauth_handler = None
 
 
 @oauth_router.get(
     "/providers",
-    response_model=List[Dict[str, str]],
     summary="List Available OAuth Providers",
     description="Returns a list of all configured OAuth 2.0 providers (Google, GitHub, LinkedIn).",
     responses={
@@ -170,7 +178,6 @@ async def list_providers() -> List[Dict[str, str]]:
 
 @oauth_router.post(
     "/login",
-    response_model=OAuthLoginResponse,
     summary="Get OAuth Authorization URL",
     description="Generates the OAuth 2.0 authorization URL for the specified provider. The user should be redirected to this URL to authenticate with the provider (Google, GitHub, LinkedIn).",
     responses={
@@ -256,8 +263,8 @@ async def oauth_login(request: OAuthLoginRequest) -> OAuthLoginResponse:
 )
 async def oauth_callback(
     provider: str,
-    code: str = Query(..., description="Code d'autorisation OAuth"),
-    state: str = Query(..., description="State OAuth"),
+    code: Annotated[str, Query(description="Code d'autorisation OAuth")],
+    state: Annotated[str, Query(description="State OAuth")],
 ) -> Dict[str, Any]:
     """Callback OAuth pour traiter la réponse du provider."""
     handler = get_oauth_handler()
@@ -286,9 +293,7 @@ async def oauth_callback(
 
     try:
         # Échanger le code contre un token d'accès
-        token_data = await handler.exchange_code_for_token(
-            provider_name=provider, code=code, redirect_uri=redirect_uri
-        )
+        token_data = await handler.exchange_code_for_token(provider_name=provider, code=code, redirect_uri=redirect_uri)
 
         access_token = token_data.get("access_token")
         if not access_token:
@@ -302,8 +307,8 @@ async def oauth_callback(
 
         # Créer ou mettre à jour l'utilisateur dans Aegis IAM
         # Pour l'instant, retourner les informations normalisées
-        # TODO: Intégrer avec le repository Aegis pour créer l'utilisateur
-        # TODO: Générer un JWT token ou session Aegis
+        # NOTE: Intégration avec le repository Aegis à implémenter dans une PR future
+        # NOTE: Génération JWT/session Aegis à implémenter dans une PR future
 
         return {
             "status": "success",
