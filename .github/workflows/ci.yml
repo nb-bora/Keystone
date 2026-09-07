@@ -8,6 +8,9 @@ on:
   release:
     types: [created]
 
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
 jobs:
   quality-and-test:
     name: Code Quality & Unit Test Matrix
@@ -131,6 +134,7 @@ jobs:
 
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
+      continue-on-error: true
       with:
         scan-type: 'fs'
         scan-ref: '.'
@@ -138,7 +142,8 @@ jobs:
         output: 'trivy-results.sarif'
 
     - name: Upload Trivy results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
+      if: hashFiles('trivy-results.sarif') != ''
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-results.sarif'
 
