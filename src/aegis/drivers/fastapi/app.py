@@ -16,6 +16,7 @@ from aegis.core.domain.entities import AIAgentActor, ServiceAccount
 from aegis.core.domain.values import PermissionCode, SubjectId, TenantId
 from aegis.core.logger import get_logger
 from aegis.drivers.fastapi.dependencies import get_aegis_client, get_aegis_container
+from aegis.drivers.fastapi.oauth_router import cleanup_oauth_handler, init_oauth_handler, oauth_router
 from aegis.drivers.fastapi.schemas import (
     AccessEvaluationResponse,
     AuditEventResponse,
@@ -40,10 +41,84 @@ SWAGGER_DESCRIPTION = """
 Aegis offre un moteur complet de gestion des identités, d'authentification et de contrôle d'accès
 (RBAC, ABAC, ReBAC) conçu selon les principes de la **Clean Architecture** et du **Domain-Driven Design (DDD)**.
 
+## 🔐 Authentication Methods
+
+Aegis IAM supports multiple authentication strategies:
+
+### 1. Password Authentication
+Traditional username/password authentication with secure hashing (PBKDF2, Argon2, bcrypt).
+
+### 2. OAuth 2.0 Social Login
+Seamless authentication with popular providers:
+- **Google**: Sign in with Google account
+- **GitHub**: Sign in with GitHub account  
+- **LinkedIn**: Sign in with LinkedIn account
+
+#### OAuth 2.0 Flow
+
+1. **Get Authorization URL**
+   ```bash
+   POST /api/v1/auth/oauth/login
+   {
+     "provider": "google",
+     "redirect_uri": "http://localhost:8000/api/v1/auth/oauth/callback/google"
+   }
+   ```
+
+2. **Redirect User to Provider**
+   The user is redirected to the provider's login page (Google, GitHub, LinkedIn).
+
+3. **Callback with Authorization Code**
+   The provider redirects back with an authorization code:
+   ```bash
+   GET /api/v1/auth/oauth/callback/google?code=...&state=...
+   ```
+
+4. **Exchange Code for Access Token**
+   The backend exchanges the code for an access token and retrieves user information.
+
+5. **Create/Update User in Aegis**
+   The user is automatically created or updated in the Aegis IAM system.
+
+#### Required Environment Variables
+
+For Google OAuth:
+```bash
+export GOOGLE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com"
+export GOOGLE_CLIENT_SECRET="your-google-client-secret"
+```
+
+For GitHub OAuth:
+```bash
+export GITHUB_CLIENT_ID="your-github-client-id"
+export GITHUB_CLIENT_SECRET="your-github-client-secret"
+```
+
+For LinkedIn OAuth:
+```bash
+export LINKEDIN_CLIENT_ID="your-linkedin-client-id"
+export LINKEDIN_CLIENT_SECRET="your-linkedin-client-secret"
+```
+
+### 3. Magic Link
+Passwordless authentication via email (One-time token sent to user's email).
+
+### 4. Passkey/WebAuthn
+Biometric authentication using device fingerprint or Face ID.
+
+### 5. M2M Tokens
+Machine-to-Machine authentication for services and AI agents.
+
 ## Enterprise Architecture 🏛️
 * **Triple-Level Healthchecks** : `/health/live` (Liveness), `/health/ready` (Readiness avec réel test DB PostgreSQL), `/health/startup` (Startup).
 * **Correlation Request ID (`X-Request-ID`)** : Traçabilité end-to-end sur toute la chaîne applicative.
 * **Network Isolation & Security** : Base PostgreSQL isolée sur réseau privé `db_net`.
+
+## API Versioning
+Current version: **v1** (prefix: `/api/v1/`)
+
+## Response Format
+All API responses follow a consistent JSON format with appropriate HTTP status codes.
 """
 
 app = FastAPI(
@@ -63,6 +138,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Inclure le router OAuth
+app.include_router(oauth_router)
+
+
+# Event de démarrage pour initialiser OAuth
+@app.on_event("startup")
+async def startup_event():
+    """Initialise les composants au démarrage."""
+    try:
+        init_oauth_handler()
+        logger.info("OAuth handler initialisé avec succès")
+    except ValueError as e:
+        logger.warning(f"OAuth handler non initialisé: {e}")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Nettoie les ressources à l'arrêt."""
+    try:
+        cleanup_oauth_handler()
+        logger.info("OAuth handler nettoyé avec succès")
+    except Exception as e:
+        logger.warning(f"Erreur lors du nettoyage OAuth: {e}")
 
 
 # Middleware de Corrélation & Logging Structuré
