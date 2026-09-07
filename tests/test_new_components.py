@@ -66,7 +66,7 @@ from aegis.core.policies.rebac import (
     RelationshipTuple,
     RelationType,
 )
-from aegis.core.validation import CustomValidator, ValidationEngine, ValidationResult
+from aegis.core.validation import ValidationEngine
 
 
 class TestConfigurationLoader(unittest.TestCase):

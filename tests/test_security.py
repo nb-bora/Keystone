@@ -25,7 +25,6 @@ from aegis.core.application.sessions import (
 )
 from aegis.core.domain.authentication import (
     AuthenticationFactory,
-    AuthenticationMethod,
 )
 from aegis.core.domain.values import SubjectId
 from aegis.core.validation import (
@@ -155,7 +154,6 @@ class SecurityTests(unittest.TestCase):
     def test_authorized_access_control(self) -> None:
         """Teste que l'accès non autorisé est refusé."""
         from aegis.core.domain.entities import HumanIdentity
-        from aegis.core.domain.values import PermissionCode
 
         # Créer un utilisateur sans permission
         user = HumanIdentity(
