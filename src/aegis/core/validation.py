@@ -27,7 +27,7 @@ class ValidationError(Exception):
 class ValidationResult:
     """Résultat d'une validation avec détails sur les erreurs."""
 
-    def __init__(self, is_valid: bool, errors: List[ValidationError] = None):
+    def __init__(self, is_valid: bool, errors: Optional[List[ValidationError]] = None):
         self.is_valid = is_valid
         self.errors = errors or []
 
@@ -73,7 +73,7 @@ class EmailValidator(Validator):
     allowed_domains: Set[str] = field(default_factory=set)
     blocked_domains: Set[str] = field(default_factory=set)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Compile la regex pour la performance."""
         object.__setattr__(self, "_compiled_regex", re.compile(self.regex))
 
@@ -88,7 +88,8 @@ class EmailValidator(Validator):
         email = value.strip().lower()
 
         # Validation regex
-        if not self._compiled_regex.match(email):
+        compiled_regex = getattr(self, "_compiled_regex", re.compile(self.regex))
+        if not compiled_regex.match(email):
             result.add_error(ValidationError(field_name, f"Email format is invalid: {email}", value))
 
         # Validation des domaines autorisés
@@ -199,7 +200,7 @@ class StringValidator(Validator):
     lowercase: bool = False
     uppercase: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Compile la regex si fournie."""
         if self.regex_pattern:
             object.__setattr__(self, "_compiled_regex", re.compile(self.regex_pattern))
@@ -247,7 +248,8 @@ class StringValidator(Validator):
                 )
 
         # Validation regex
-        if self._compiled_regex and not self._compiled_regex.match(string_value):
+        compiled_regex = getattr(self, "_compiled_regex", None)
+        if compiled_regex and not compiled_regex.match(string_value):
             result.add_error(
                 ValidationError(field_name, f"String does not match required pattern: {self.regex_pattern}", value)
             )
@@ -356,7 +358,7 @@ class CustomValidator(Validator):
 class ValidationRegistry:
     """Registre des validateurs disponibles."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._validators: Dict[str, Validator] = {}
         self._field_validators: Dict[str, Dict[str, Validator]] = {}
 

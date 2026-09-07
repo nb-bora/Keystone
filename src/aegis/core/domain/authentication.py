@@ -235,7 +235,7 @@ class OIDCCredential(Credential):
 class OIDCAuthStrategy(AuthenticationStrategy):
     """Stratégie d'authentification OIDC/OAuth2."""
 
-    def __init__(self, providers_config: List[Dict[str, Any]] = None) -> None:
+    def __init__(self, providers_config: Optional[List[Dict[str, Any]]] = None) -> None:
         self._providers_config = providers_config or []
         self._providers = {p["name"]: p for p in self._providers_config}
 
@@ -532,7 +532,7 @@ class AuthenticationFactory:
 
     @staticmethod
     def create_default_manager(
-        password_hasher: PasswordHasher, oidc_providers: List[Dict[str, Any]] = None
+        password_hasher: PasswordHasher, oidc_providers: Optional[List[Dict[str, Any]]] = None
     ) -> AuthenticationManager:
         """Crée un gestionnaire d'authentification avec les stratégies par défaut."""
         manager = AuthenticationManager()

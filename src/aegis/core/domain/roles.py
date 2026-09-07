@@ -202,7 +202,7 @@ class RoleHierarchyResolver:
             return self._cache[role.id]
 
         permissions = set(role.permissions)
-        visited = set()
+        visited: Set[RoleId] = set()
         self._collect_parent_permissions(role.id, permissions, visited)
 
         self._cache[role.id] = permissions
@@ -425,7 +425,7 @@ class SystemRolesFactory:
             id=RoleId("super_admin"),
             name="Super Administrator",
             description="Accès complet à toutes les fonctionnalités",
-            permissions={"*"},  # Wildcard pour toutes les permissions
+            permissions={PermissionCode("*")},  # Wildcard pour toutes les permissions
             is_system_role=True,
         )
 
@@ -437,14 +437,14 @@ class SystemRolesFactory:
             name="Administrator",
             description="Accès administratif standard",
             permissions={
-                "user:read",
-                "user:write",
-                "user:delete",
-                "role:read",
-                "role:write",
-                "audit:read",
-                "settings:read",
-                "settings:write",
+                PermissionCode("user:read"),
+                PermissionCode("user:write"),
+                PermissionCode("user:delete"),
+                PermissionCode("role:read"),
+                PermissionCode("role:write"),
+                PermissionCode("audit:read"),
+                PermissionCode("settings:read"),
+                PermissionCode("settings:write"),
             },
             is_system_role=True,
         )
@@ -457,12 +457,12 @@ class SystemRolesFactory:
             name="Moderator",
             description="Accès de modération de contenu",
             permissions={
-                "content:read",
-                "content:write",
-                "content:moderate",
-                "user:read",
-                "report:read",
-                "report:process",
+                PermissionCode("content:read"),
+                PermissionCode("content:write"),
+                PermissionCode("content:moderate"),
+                PermissionCode("user:read"),
+                PermissionCode("report:read"),
+                PermissionCode("report:process"),
             },
             is_system_role=True,
         )
@@ -474,7 +474,12 @@ class SystemRolesFactory:
             id=RoleId("editor"),
             name="Editor",
             description="Accès d'édition de contenu",
-            permissions={"content:read", "content:write", "media:read", "media:upload"},
+            permissions={
+                PermissionCode("content:read"),
+                PermissionCode("content:write"),
+                PermissionCode("media:read"),
+                PermissionCode("media:upload"),
+            },
             is_system_role=True,
         )
 

@@ -260,7 +260,7 @@ class ConfigLoader:
             # Pattern ${VAR_NAME} ou $VAR_NAME
             pattern = r"\$\{([^}]+)\}|\$([A-Za-z_][A-Za-z0-9_]*)"
 
-            def replace_env_var(match):
+            def replace_env_var(match: Any) -> str:
                 var_name = match.group(1) or match.group(2)
                 return os.getenv(var_name, match.group(0))
 
