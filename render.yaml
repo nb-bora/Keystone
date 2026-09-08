@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: aegis-iam-api
+    env: python
+    buildCommand: pip install -e ".[fastapi,sqlalchemy]"
+    startCommand: uvicorn aegis.drivers.fastapi.app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: PORT
+        value: 8000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: aegis-postgres
+          property: connectionString
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: LINKEDIN_CLIENT_ID
+        sync: false
+      - key: LINKEDIN_CLIENT_SECRET
+        sync: false
+
+databases:
+  - name: aegis-postgres
+    databaseName: aegis_iam
+    user: aegis_user

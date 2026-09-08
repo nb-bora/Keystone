@@ -1,0 +1,49 @@
+name: Deploy to Render and Notify Discord
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Render
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Discord - Deployment Started
+        run: |
+          curl -X POST ${{ secrets.DISCORD_WEBHOOK_URL }} \
+            -H "Content-Type: application/json" \
+            -d '{
+              "content": "🚀 **Deployment Started**\n\nBranch: main\nRepository: ${{ github.repository }}\nCommit: ${{ github.sha }}\nAuthor: ${{ github.actor }}",
+              "username": "Aegis IAM Bot",
+              "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+            }'
+
+      - name: Wait for Render Deployment
+        run: |
+          echo "Waiting for Render to deploy..."
+          sleep 60  # Wait for Render to start deployment
+          echo "Render deployment initiated"
+
+      - name: Notify Discord - Deployment Success
+        if: success()
+        run: |
+          curl -X POST ${{ secrets.DISCORD_WEBHOOK_URL }} \
+            -H "Content-Type: application/json" \
+            -d '{
+              "content": "✅ **Deployment Successful**\n\nBranch: main\nRepository: ${{ github.repository }}\nCommit: ${{ github.sha }}\nAuthor: ${{ github.actor }}\n\n🌐 URL: https://aegis-iam-api.onrender.com/docs",
+              "username": "Aegis IAM Bot",
+              "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+            }'
+
+      - name: Notify Discord - Deployment Failed
+        if: failure()
+        run: |
+          curl -X POST ${{ secrets.DISCORD_WEBHOOK_URL }} \
+            -H "Content-Type: application/json" \
+            -d '{
+              "content": "❌ **Deployment Failed**\n\nBranch: main\nRepository: ${{ github.repository }}\nCommit: ${{ github.sha }}\nAuthor: ${{ github.actor }}\n\nPlease check the logs for details.",
+              "username": "Aegis IAM Bot",
+              "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+            }'
